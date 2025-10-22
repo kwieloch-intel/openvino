@@ -57,8 +57,12 @@ BorderKernelBase::DispatchData BorderKernelBase::SetDefault(const border_params&
         dispatchData.lws = GetOptimalLocalWorkGroupSizes(dispatchData.gws, params.engineInfo, in_layout, out_layout, dims_by_gws);
     }
 
+    if (params.engineInfo.arch < gpu_arch::xe2) {
+        return dispatchData;
+    }
+
     using DispatchDataPair = std::pair<std::array<size_t, 3>, std::array<size_t, 3>>;
-    static const std::array<DispatchDataPair, 4> lws_mapping_table = {{
+    static constexpr std::array<DispatchDataPair, 4> lws_mapping_table = {{
             DispatchDataPair{{264, 264,  32}, {1, 1, 32}},
             DispatchDataPair{{264, 264,  64}, {1, 1, 64}},
             DispatchDataPair{{132, 132, 128}, {1, 1, 64}},
