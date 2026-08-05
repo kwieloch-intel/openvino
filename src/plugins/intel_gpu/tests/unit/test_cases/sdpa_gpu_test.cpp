@@ -631,8 +631,9 @@ static void run_compressed_kv_sdpa_test(int bit_width) {
     auto k_orig = rg.generate_random_1d<ov::float16>(static_cast<size_t>(batch) * seq_kv * num_heads * head_size, -1.0f, 1.0f);
     auto v_orig = rg.generate_random_1d<ov::float16>(static_cast<size_t>(batch) * seq_kv * num_heads * head_size, -1.0f, 1.0f);
 
-    auto k_q = quantize_kv_per_channel(k_orig, batch, num_heads, seq_kv, head_size, bit_width,/*seq_major=*/false, nullptr, /*symmetric=*/true);
-    auto v_q = quantize_kv_per_channel(v_orig, batch, num_heads, seq_kv, head_size, bit_width, /*seq_major=*/false, nullptr, /*symmetric=*/true);
+    // Argument order is (src, batch, seq, heads, head_size).
+    auto k_q = quantize_kv_per_channel(k_orig, batch, seq_kv, num_heads, head_size, bit_width,/*seq_major=*/false, nullptr, /*symmetric=*/true);
+    auto v_q = quantize_kv_per_channel(v_orig, batch, seq_kv, num_heads, head_size, bit_width, /*seq_major=*/false, nullptr, /*symmetric=*/true);
 
     const layout q_layout({batch, num_heads, seq_q, head_size}, data_types::f16, format::bfyx);
     const layout kv_deq_layout({batch, num_heads, seq_kv, head_size}, data_types::f16, format::bfyx);
