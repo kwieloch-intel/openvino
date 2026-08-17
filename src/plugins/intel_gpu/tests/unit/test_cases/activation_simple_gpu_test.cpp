@@ -1518,8 +1518,8 @@ TEST(activation_bf16_fw_gpu, basic_bfyx_all_functions)
     auto input = engine.allocate_memory({ data_types::bf16, format::bfyx, { 1, 1, 2, 4 } });
     auto input_params = engine.allocate_memory({ data_types::bf16, format::bfyx, { 1, 2, 1, 1 } });
 
-    set_values(input, { ov::bfloat16(-4.5f), ov::bfloat16(-2.5f), ov::bfloat16(-1.5f), ov::bfloat16(0.5f),
-                        ov::bfloat16(0.9f),  ov::bfloat16(1.5f),  ov::bfloat16(2.0f),  ov::bfloat16(2.5f) });
+    set_values(input, { ov::bfloat16(-4.7f), ov::bfloat16(-2.3f), ov::bfloat16(-1.7f), ov::bfloat16(0.3f),
+                        ov::bfloat16(0.9f),  ov::bfloat16(1.7f),  ov::bfloat16(2.0f),  ov::bfloat16(2.3f) });
 
     std::vector<activation_func> funcs = {
         activation_func::linear,
