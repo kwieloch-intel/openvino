@@ -822,6 +822,9 @@ void TransformationsPipeline::apply(std::shared_ptr<ov::Model> func) {
             return static_cast<int32_t>((gamma_shape.back() / vec_size)) > static_cast<int32_t>(device_info.max_work_group_size);
         });
         manager.register_pass<ov::pass::RMSFusion>(false, true, true);
+        // Also run L2NormToRMS here, before ConvertPrecision: by the late registration MarkDivWithEps has already
+        // kept the L2-norm chain (eps below the fp16 range) in f32, so the fused RMS and the ops around it stay f32.
+        manager.register_pass<ov::intel_gpu::L2NormToRMS>(device_info.max_work_group_size);
         manager.register_pass<ov::intel_gpu::FoldRMSTransposes>();
         manager.register_pass<DisableFP16CompForGemma3RMSPattern>();
         const bool fp16_activation_scaling_enabled =
