@@ -1866,8 +1866,11 @@ void TransformationsPipeline::apply(std::shared_ptr<ov::Model> func) {
             // the whole model if a linear-attention block is detected.
             const bool use_gs128_for_linear_attention = is_hybrid_linear_attention_model(*func);
             const bool use_gs128_for_int8_per_token = m_context->get_engine().get_device_info().arch >= cldnn::gpu_arch::xe2;
-            // oneDNN has int8-activation kernels for u2 weights only on Xe3 so far
-            const bool u2_int8_activations = m_context->get_engine().get_device_info().arch == cldnn::gpu_arch::xe3;
+            // oneDNN has int8-activation kernels for u2 weights on Xe2 and Xe3. They are measured faster than f16 on
+            // Xe3 and on integrated Xe2; discrete Xe2 keeps f16 activations until it is measured.
+            const auto& u2_device_info = m_context->get_engine().get_device_info();
+            const bool u2_int8_activations = u2_device_info.arch == cldnn::gpu_arch::xe3 ||
+                                             (u2_device_info.arch == cldnn::gpu_arch::xe2 && u2_device_info.dev_type == cldnn::device_type::integrated_gpu);
             const uint64_t dynamic_quantization_threshold = config.get_dynamic_quantization_threshold();
 
             pass_config->set_callback<ov::intel_gpu::DynamicQuantizeFullyConnected>([=](const_node_ptr& root) -> bool {
@@ -1894,7 +1897,7 @@ void TransformationsPipeline::apply(std::shared_ptr<ov::Model> func) {
                     }
                 }
                 if (root->get_input_element_type(1) == ov::element::u2 && !u2_int8_activations) {
-                    GPU_DEBUG_TRACE << root->get_friendly_name() << "  dyn_quan is turned off: no int8-activation kernels for u2 weights on this device" << std::endl;
+                    GPU_DEBUG_TRACE << root->get_friendly_name() << "  dyn_quan is turned off: u2 int8 activations are not enabled on this device" << std::endl;
                     return true;
                 }
                 // Small batches are skipped at runtime (dynamic_quantization_threshold), but only for dynamic shapes:
