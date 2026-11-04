@@ -132,6 +132,9 @@ struct onednn_eltwise_fusing_helpers {
     static add_fusing_type get_add_fusing_type(const program_node& node, const fused_primitive_desc& desc);
     static int32_t get_reused_eltwmem_idx(const program_node& node);
     static bool can_use_mul_inplace(const program_node& node, const fused_primitive_desc& desc);
+    // The nodes that read node's output buffer: its users and, where a user writes its output in place into that
+    // buffer (see get_reused_eltwmem_idx), the readers of that user's output as well.
+    static std::vector<program_node*> get_buffer_readers(program_node& node);
 };
 
 using add_fusing_type = onednn_eltwise_fusing_helpers::add_fusing_type;

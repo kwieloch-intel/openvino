@@ -79,12 +79,16 @@ void basic_memory_dependencies::run(program& p) {
                     eltw_dep = fused_op.outer_dep_start_idx;
                     auto& eltw_node = node->get_dependency(eltw_dep);
                     node->can_share_buffer(false);
-                    // Walk up the in-place chain to mark the root buffer owner as non-shareable.
+                    // An added tensor that owns its buffer stays in the memory pool: the memory dependency passes
+                    // keep that buffer alive until the last reader of this node's output (get_buffer_readers).
+                    // Behind an optimized-out (in-place) chain, mark the root buffer owner as non-shareable.
                     auto* root = &eltw_node;
                     while (root->can_be_optimized() && !root->get_dependencies().empty()) {
                         root = &root->get_dependency(0);
                     }
-                    root->can_share_buffer(false);
+                    if (root != &eltw_node) {
+                        root->can_share_buffer(false);
+                    }
 
                     for (const auto& user : node->get_users()) {
                         add_memory_dependency(user, &eltw_node);
