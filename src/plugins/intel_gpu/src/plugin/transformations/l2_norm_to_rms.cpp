@@ -19,6 +19,7 @@
 #include "openvino/pass/pattern/op/optional.hpp"
 #include "openvino/pass/pattern/op/wrap_type.hpp"
 #include "ov_ops/rms.hpp"
+#include "transformations/rt_info/disable_precision_conversion.hpp"
 #include "transformations/utils/utils.hpp"
 
 namespace ov::intel_gpu {
@@ -94,6 +95,8 @@ L2NormToRMS::L2NormToRMS(size_t max_work_group_size) {
         rms->set_friendly_name(root->get_friendly_name());
         ov::copy_runtime_info(m.get_matched_nodes(), {scaled_gamma, rms});
         ov::replace_node(root, rms);
+        // The gamma may be dequantized from u16 values above the f16 range: keep the gamma in FP32.
+        ov::disable_conversion(scaled_gamma, ov::element::f16);
         return true;
     };
 
