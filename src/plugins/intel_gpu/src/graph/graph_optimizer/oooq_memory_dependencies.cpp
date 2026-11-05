@@ -9,7 +9,6 @@
 #include "intel_gpu/graph/program.hpp"
 #include "intel_gpu/runtime/itt.hpp"
 #include "pass_manager.h"
-#include "program_helpers.h"
 #include "program_node.h"
 #include "shape_of_inst.h"
 
@@ -188,8 +187,7 @@ void oooq_memory_dependencies::run(program& p) {
                 add_memory_dependency(*itr_A, *itr_B);
                 add_memory_dependency(*itr_B, *itr_A);
             } else {
-                // Every reader of A's buffer counts, including the readers behind an in-place (onednn sum) user.
-                for (auto* u : onednn_eltwise_fusing_helpers::get_buffer_readers(**itr_A)) {
+                for (auto* u : (*itr_A)->get_users()) {
                     if (u != (*itr_B) && !are_connected(B, user_map[u]) && !are_connected(user_map[u], B)) {
                         add_memory_dependency(*itr_A, *itr_B);
                         add_memory_dependency(*itr_B, *itr_A);

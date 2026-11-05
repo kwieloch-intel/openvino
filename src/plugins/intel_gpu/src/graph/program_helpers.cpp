@@ -239,17 +239,4 @@ int32_t onednn_eltwise_fusing_helpers::get_reused_eltwmem_idx(const program_node
     }
     return -1;   // if -1, no reused input memory
 }
-
-std::vector<program_node*> onednn_eltwise_fusing_helpers::get_buffer_readers(program_node& node) {
-    std::vector<program_node*> readers;
-    for (auto* user : node.get_users()) {
-        readers.push_back(user);
-        const auto idx = get_reused_eltwmem_idx(*user);
-        if (idx != -1 && &user->get_dependency(idx) == &node) {
-            const auto aliased = get_buffer_readers(*user);
-            readers.insert(readers.end(), aliased.begin(), aliased.end());
-        }
-    }
-    return readers;
-}
 }  // namespace cldnn
